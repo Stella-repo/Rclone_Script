@@ -1,3 +1,5 @@
+from ast import Continue
+from copy import copy
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
@@ -27,15 +29,21 @@ drive_service = build('drive', 'v3', http=creds.authorize(Http()))
 # print(items)
 
 
+# URL받아서 링크타입이랑 ID추출
+while True:
+    copied_link = input('복사할 폴더 or 파일(URL or ID) : ')
+    copied_link = copied_link.replace('?','\n')
+    copied_link = copied_link.replace('/','\n')
+    copied_link = copied_link.replace('=','\n')
+    copied_link = copied_link.split('\n')
+    copied_id = 'x'
+    for i in range(0, len(copied_link)):
+        if len(copied_link[i]) >= 33:
+            copied_id = str(copied_link[i])
+            break
+    if len(copied_id) >= 33:
+        break
 
-copied_link = input('복사할 폴더 or 파일(URL or ID) : ')
-copied_link = copied_link.replace('?','\n')
-copied_link = copied_link.replace('/','\n')
-copied_link = copied_link.replace('=','\n')
-copied_link = copied_link.split('\n')
-for i in range(0, len(copied_link)):
-    if len(copied_link[i]) == 33:
-        copied_id = str(copied_link[i])
 
 if 'folder' in copied_link:
     copied_type = 'folder'
@@ -49,3 +57,22 @@ else:
         copied_type = 'folder'
     else:
         copied_type = 'file'
+print('링크타입 :', copied_type)
+print('ID :', copied_id)
+
+
+# 복사방법 선택
+while True:
+    method = input('(1)Drive-server-side-across Copy / (2)Download to Local Storage : ')
+    if method == '1':
+        print('Selected Drive-server-side-across Copy')
+        break
+    elif method == '2':
+        print('Selected Download to Local Storage')
+        break
+
+
+#폴더위치 설정
+folder = input('Destination Folder (Default : Rclone-Folder-Copy) : ')
+if folder == '':
+    folder = 'Rclone-Folder-Copy'
