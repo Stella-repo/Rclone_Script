@@ -29,42 +29,54 @@ drive_service = build('drive', 'v3', http=creds.authorize(Http()))
 # print(items)
 
 
+def split_link(url):
+    url = url.replace('?','\n')
+    url = url.replace('/','\n')
+    url = url.replace('=','\n')
+    url = url.split('\n')
+    output = 'x'
+    for i in range(0, len(url)):
+        if len(url[i]) >= 33:
+            output = str(url[i])
+            break
+    return output
+
+def check_api(id):
+    try:
+        return drive_service.files().get(fileId=id, supportsAllDrives='true', supportsTeamDrives='true').execute()
+    except:
+        return 'retry'
+
+
 # URL받아서 링크타입이랑 ID추출
 while True:
-    copied_link = input('복사할 폴더 or 파일(URL or ID) : ')
-    copied_link = copied_link.replace('?','\n')
-    copied_link = copied_link.replace('/','\n')
-    copied_link = copied_link.replace('=','\n')
-    copied_link = copied_link.split('\n')
-    copied_id = 'x'
-    for i in range(0, len(copied_link)):
-        if len(copied_link[i]) >= 33:
-            copied_id = str(copied_link[i])
+    while True:
+        copied_link  = input('복사할 폴더 or 파일(URL or ID) : ')
+        copied_id = split_link(copied_link)
+        if len(copied_id) >= 33:
             break
-    if len(copied_id) >= 33:
-        break
-
-
-if 'folder' in copied_link:
-    copied_type = 'folder'
-elif 'file' in copied_link:
-    copied_type = 'file'
-elif 'uc' in copied_link:
-    copied_type = 'file'
-else:
-    check_type = drive_service.files().get(fileId=copied_id, supportsAllDrives='true', supportsTeamDrives='true').execute()
-    if 'folder' in check_type.get('mimeType'):
+    checked_type = check_api(copied_id).get('mimeType')
+    if 'folder' in checked_type:
         copied_type = 'folder'
+        print('링크타입 :', copied_type)
+        print('ID :', copied_id)
+        break
+    elif checked_type == 'retry':
+        continue
     else:
         copied_type = 'file'
-print('링크타입 :', copied_type)
-print('ID :', copied_id)
+        print('링크타입 :', copied_type)
+        print('ID :', copied_id)
+        break
 
 
 # 복사방법 선택
 while True:
-    method = input('(1)Drive-server-side-across Copy / (2)Download to Local Storage : ')
-    if method == '1':
+    method = input('(1)Drive-server-side-across Copy / (2)Download to Local Storage (Default : (1)) : ')
+    if method == '':
+        print('Selected Drive-server-side-across Copy')
+        break
+    elif method == '1':
         print('Selected Drive-server-side-across Copy')
         break
     elif method == '2':
@@ -73,6 +85,32 @@ while True:
 
 
 #폴더위치 설정
-folder = input('Destination Folder (Default : Rclone-Folder-Copy) : ')
-if folder == '':
-    folder = 'Rclone-Folder-Copy'
+while True:
+    folder = input('Destination Folder (Default : Rclone-Folder-Copy) : ')
+    if folder == '':
+        folder = 'Rclone-Folder-Copy'
+        tocopy_id = '0'
+        print('copy to', folder)
+        break
+    elif ('http' in folder) or ('google.com' in folder):
+        folder = split_link(folder)
+        if len(folder) == 33:
+            if 'folder' in check_api(folder).get('mimeType'):
+                tocopy_id = '1'
+                print('copy to 1', folder)
+                break
+            else:
+                continue
+    elif ' ' not in folder:
+        if len(split_link(folder)) == 33:
+            if 'folder' in check_api(folder).get('mimeType'):
+                tocopy_id = '1'
+                print('copy to 2', folder)
+                break
+            else:
+                continue
+    else:
+        tocopy_id = '0'
+        print('copy to', folder)
+        break
+
