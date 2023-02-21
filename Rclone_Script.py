@@ -6,13 +6,21 @@ from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
 
+os.system('title Rclone_Script')
+
 try:
     import argparse
     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
 except ImportError:
     flags = None
 
-SCOPES = 'https://www.googleapis.com/auth/drive.file'
+while True:
+    if os.path.isfile('.\\client_secret_drive.json') == False:
+        input('OAuth 2.0 클라이언트 ID파일을 생성해주세요.')
+    else:
+        break
+
+SCOPES = 'https://www.googleapis.com/auth/drive.readonly'
 store = file.Storage('token.json')
 creds = store.get()
 
@@ -23,7 +31,7 @@ if not creds or creds.invalid:
     creds = tools.run_flow(flow, store, flags) if flags else tools.run(flow, store)
 
 drive_service = build('drive', 'v3', http=creds.authorize(Http()))
-
+os.system('cls')
 
 def split_link(url):
     url = url.replace('?','\n')
@@ -171,7 +179,7 @@ def work_script():
     os.system('color 0A')
     print()
     print('작업완료!!')
-    input('화면을 초기화하려면 아무 키나 누르십시오 . . .')
+    input('화면을 초기화하려면 엔터를 누르시오 . . .')
 
 
 while True:
